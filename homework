@@ -10,52 +10,59 @@
 // @grant        none
 // ==/UserScript==
 
-function getCookie(name) {//нужно, чтоб значение переменной site не менялось, каждый раз после загрузки страницы
+function getCookie(name) {
   let matches = document.cookie.match(new RegExp(
     "(?:^|; )" + name.replace(/([\.$?*|{}\(\)\[\]\\\/\+^])/g, '\\$1') + "=([^;]*)"
   ));
   return matches ? decodeURIComponent(matches[1]) : undefined;
-}//эта функция доступа к куки по имени
+}
 let sites = {
-    "xn----7sbab5aqcbiddtdj1e1g.xn--p1ai":["Как звучит флейта","Валторна","Тромбон","Кларнет","Фагот","Гобой","Саксофон"],//ключ:значения
+    "xn----7sbab5aqcbiddtdj1e1g.xn--p1ai":["Как звучит флейта","Валторна","Тромбон","Кларнет","Фагот","Гобой","Саксофон"],
     "crushdrummers.ru":["Барабанное шоу","Заказать шоу барабанщиков","Барабанное шоу в Москве"]
-}//создаем объект, чтоб связать название сайта и ключевые слова в виде массива, пишем в переменную sites
-let site = Object.keys(sites)[Math.floor(Math.random()*Object.keys(sites).length)];//случайным образом обращаемся одному из сайтов
-let keywords = sites[site];//формируем список ключевых слов - обращаемся к значениям по выбранному ключу
+}
+let site = Object.keys(sites)[Math.floor(Math.random()*Object.keys(sites).length)];
+let keywords = sites[site];
 let randomIndex = Math.floor(Math.random()*keywords.length);
-let keyword = keywords[randomIndex];//вбиваем рандомное слово по рандомному индексу из массива сверху
-let yandexInput = document.getElementsByName("text")[0];//задаем поисковую строку по имени
-let btn = document.getElementsByClassName('button')[0];//задаем кнопку
-let links = document.links;//сюда весь массив результатов поиска со страницы
-if(btn!=undefined){//главная страница поисковика
+let keyword = keywords[randomIndex];
+let yandexInput = document.getElementsByName("text")[0];
+let btn = document.getElementsByClassName('button')[0];
+let links = document.links;
+if(btn!=undefined){
     let i = 0;
-    document.cookie = "site="+site;//кладем сюда наш сайт, который выбран выше
-    let timerId = setInterval(()=>{//тут побуквенно вбивается слово
+    document.cookie = "site="+site;
+    let timerId = setInterval(()=>{
         yandexInput.value += keyword[i++];
         if(i==keyword.length){
             clearInterval(timerId);
             btn.click();
         }
     },250);
-}else if(location.hostname == "yandex.ru"){ //если мы на странице выдачи поисковых результатов
-    site = getCookie("site");//извлекаем тут наш сайт, заданный выше, когда переходим на др страницу, не главную
+}else if(location.hostname == "yandex.ru"){
+    site = getCookie("site");
     let nextYandexPage = true;
-    let currentYandexPage = document.getElementsByClassName('pager__item')[3].innerText;//сохраняем число, которое обозначает номер страницы, на которой находимся
+    //let currentYandexPage = document.getElementsByClassName('pager__item pager__item_current_yes pager__item_kind_page')[0].innerText;
     for(let i=0; i<links.length; i++){
         let link = links[i];
         if(link.href.indexOf(site)!=-1){
             nextYandexPage = false;
-            link.removeAttribute('target');//чтоб не открывал в новой вкладке
-            link.click(); // клик по ссылке
-            break; // прерываем цикл
+            link.click();
+            break;
         }
     }
-    if(nextYandexPage && currentYandexPage<11) setTimeout(()=>{document.querySelector('[aria-label="Следующая страница"]').click()},1500);//идет на следующую в поисковике
-    else if(currentYandexPage == 11) location.href = "https://yandex.ru/";//location - это где мы находимся, идет на главную
-}else{ //если находимся на найденном сайте, а не на гл странице или в выдаче
-    setInterval(()=>{//ставим задержку, чтоб бот вел себя ествественно
-        if(Math.random()>=0.8) location.href = "https://yandex.ru/";//уходит на яндекс, если
-        let link = links[Math.floor(Math.random()*links.length)];//выбираем случайную ссылку
+    setTimeout(()=>{
+        let currentYandexPage = document.getElementsByClassName('pager__item pager__item_current_yes pager__item_kind_page')[0].innerText;
+        if (nextYandexPage && currentYandexPage<10){
+            document.querySelector('[aria-label="Следующая страница"]').click()
+        } else {
+           location.href = "https://yandex.ru/";
+        }
+    }, 1500);
+    /*if(nextYandexPage && currentYandexPage<11) setTimeout(()=>{document.querySelector('[aria-label="Следующая страница"]').click()},1500);
+    else if(currentYandexPage == 11) location.href = "https://yandex.ru/";*/
+}else{
+    setInterval(()=>{
+        if(Math.random()>=0.8) location.href = "https://yandex.ru/";
+        let link = links[Math.floor(Math.random()*links.length)];
         if(link.href.indexOf(location.hostname)!=-1){
            link.click();}
         },3000);
